@@ -17,18 +17,13 @@
 //
 #include "gpu_stgauss2.h"
 #include "gpu_st.h"
-#include "gpu_sampler.h"
-
 
 static texture<float, 2, cudaReadModeElementType> s_texSRC1;
 static texture<float4, 2, cudaReadModeElementType> s_texSRC4;
 
-inline __host__ __device__ texture<float,2>& texSRC1() { return s_texSRC1; }
-inline __host__ __device__ texture<float4,2>& texSRC4() { return s_texSRC4; }
-
 static texture<float4, 2, cudaReadModeElementType> s_texST;
-inline __host__ __device__ texture<float4,2>& texST() { return s_texST; }
 
+#include "gpu_sampler.h"
 
 template <typename T, typename SRC>
 struct stgauss2_filter {
@@ -88,17 +83,17 @@ gpu_image<float> gpu_stgauss2_filter( const gpu_image<float>& src, const gpu_ima
     if (sigma <= 0) return src;
     gpu_image<float> dst(src.size());
 
-    gpu_sampler<float, texSRC1> src_sampler(src, src_linear? cudaFilterModeLinear : cudaFilterModePoint);
+    gpu_sampler_SRC1<float> src_sampler(src, src_linear? cudaFilterModeLinear : cudaFilterModePoint);
     float cos_max = cosf(radians(max_angle));
 
     if (src.size() == st.size()) {
-        gpu_sampler<float4, texST> st_sampler(st, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
+        gpu_sampler_ST<float4> st_sampler(st, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
         if (order == 1) imp_stgauss2_filter<1,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 2) imp_stgauss2_filter<2,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 4) imp_stgauss2_filter<4,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
     } else {
         float2 s = make_float2((float)st.w() / src.w(), (float)st.h() / src.h());
-        gpu_resampler<float4, texST> st_sampler(st, s, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
+        gpu_resampler_ST<float4> st_sampler(st, s, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
         if (order == 1) imp_stgauss2_filter<1,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 2) imp_stgauss2_filter<2,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 4) imp_stgauss2_filter<4,float><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
@@ -115,17 +110,17 @@ gpu_image<float4> gpu_stgauss2_filter( const gpu_image<float4>& src, const gpu_i
     if (sigma <= 0) return src;
     gpu_image<float4> dst(src.size());
 
-    gpu_sampler<float4, texSRC4> src_sampler(src, src_linear? cudaFilterModeLinear : cudaFilterModePoint);
+    gpu_sampler_SRC4<float4> src_sampler(src, src_linear? cudaFilterModeLinear : cudaFilterModePoint);
     float cos_max = cosf(radians(max_angle));
 
     if (src.size() == st.size()) {
-        gpu_sampler<float4, texST> st_sampler(st, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
+        gpu_sampler_ST<float4> st_sampler(st, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
         if (order == 1) imp_stgauss2_filter<1,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 2) imp_stgauss2_filter<2,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 4) imp_stgauss2_filter<4,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
     } else {
         float2 s = make_float2((float)st.w() / src.w(), (float)st.h() / src.h());
-        gpu_resampler<float4, texST> st_sampler(st, s, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
+        gpu_resampler_ST<float4> st_sampler(st, s, st_linear? cudaFilterModeLinear : cudaFilterModePoint);
         if (order == 1) imp_stgauss2_filter<1,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 2) imp_stgauss2_filter<2,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
         else if (order == 4) imp_stgauss2_filter<4,float4><<<dst.blocks(), dst.threads()>>>(dst, src_sampler, st_sampler, sigma, cos_max, adaptive, step_size);
