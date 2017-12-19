@@ -35,6 +35,9 @@ Building:
         3) cmake ..
         4) make
 
+Use the following to disable ffmpeg:
+
+    cmake -DWITH_FFMPEG=OFF ..
 
 Precompiled binaries for Windows require the Visual Studio 2008 runtimes:
     

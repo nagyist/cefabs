@@ -39,7 +39,7 @@ void gpu_error_msg(cudaError_t err, const char *file, size_t line) {
         DebugBreak();
     }
 #else
-    fprintf(stderr, "%s(ld): CUDA Error\n", file, (int)line);
+    fprintf(stderr, "%s(%ld): CUDA Error\n", file, line);
     fprintf(stderr, "%s\n", cudaGetErrorString(err));
 #endif
     exit(1);
