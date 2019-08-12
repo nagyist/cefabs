@@ -21,44 +21,119 @@
 
 #ifdef __CUDACC__
 
-template<typename T, texture<T,2>& texture_ref()> 
-struct gpu_sampler {
-    __host__ gpu_sampler(const gpu_image<T>& img, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
-        texture_ref().filterMode = filter_mode;
-        GPU_SAFE_CALL(cudaBindTexture2D(0, texture_ref(), img.ptr(), img.w(), img.h(), img.pitch()));
+template<typename T> 
+struct gpu_sampler_SRC1 {
+    __host__ gpu_sampler_SRC1 (const gpu_image<T>& img, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+        s_texSRC1.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texSRC1, img.ptr(), img.w(), img.h(), img.pitch()));
     }
 
-    __host__ ~gpu_sampler() {
-        texture_ref().filterMode = cudaFilterModePoint;
-        cudaUnbindTexture(texture_ref());
+    __host__ ~gpu_sampler_SRC1 () {
+        s_texSRC1.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texSRC1);
     }
     
     __device__ T operator()(float x, float y) const { 
-        return tex2D(texture_ref(), x, y); 
+        return tex2D(s_texSRC1, x, y); 
     } 
 };
 
 
-template<typename T, texture<T,2>& texture_ref()> 
-struct gpu_resampler {
+template<typename T> 
+struct gpu_resampler_SRC1 {
     float2 s_;
 
-    __host__ gpu_resampler(const gpu_image<T>& img, float2 s, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+    __host__ gpu_resampler_SRC1 (const gpu_image<T>& img, float2 s, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
         s_ = s;
-        texture_ref().filterMode = filter_mode;
-        GPU_SAFE_CALL(cudaBindTexture2D(0, texture_ref(), img.ptr(), img.w(), img.h(), img.pitch()));
+        s_texSRC1.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texSRC1, img.ptr(), img.w(), img.h(), img.pitch()));
     }
 
-    __host__ ~gpu_resampler() {
-        texture_ref().filterMode = cudaFilterModePoint;
-        cudaUnbindTexture(texture_ref());
+    __host__ ~gpu_resampler_SRC1 () {
+        s_texSRC1.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texSRC1);
     }
 
     __device__ T operator()(float x, float y) const { 
-        return tex2D(texture_ref(), s_.x * x, s_.x * y); 
+        return tex2D(s_texSRC1, s_.x * x, s_.x * y); 
     } 
 };
 
+template<typename T> 
+struct gpu_sampler_SRC4 {
+    __host__ gpu_sampler_SRC4(const gpu_image<T>& img, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+        s_texSRC4.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texSRC4, img.ptr(), img.w(), img.h(), img.pitch()));
+    }
+
+    __host__ ~gpu_sampler_SRC4() {
+        s_texSRC4.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texSRC4);
+    }
+    
+    __device__ T operator()(float x, float y) const { 
+        return tex2D(s_texSRC4, x, y); 
+    } 
+};
+
+
+template<typename T> 
+struct gpu_resampler_SRC4 {
+    float2 s_;
+
+    __host__ gpu_resampler_SRC4(const gpu_image<T>& img, float2 s, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+        s_ = s;
+        s_texSRC4.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texSRC4, img.ptr(), img.w(), img.h(), img.pitch()));
+    }
+
+    __host__ ~gpu_resampler_SRC4() {
+        s_texSRC4.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texSRC4);
+    }
+
+    __device__ T operator()(float x, float y) const { 
+        return tex2D(s_texSRC4, s_.x * x, s_.x * y); 
+    } 
+};
+
+template<typename T> 
+struct gpu_sampler_ST {
+    __host__ gpu_sampler_ST(const gpu_image<T>& img, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+        s_texST.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texST, img.ptr(), img.w(), img.h(), img.pitch()));
+    }
+
+    __host__ ~gpu_sampler_ST() {
+        s_texST.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texST);
+    }
+    
+    __device__ T operator()(float x, float y) const { 
+        return tex2D(s_texST, x, y); 
+    } 
+};
+
+
+template<typename T> 
+struct gpu_resampler_ST {
+    float2 s_;
+
+    __host__ gpu_resampler_ST(const gpu_image<T>& img, float2 s, cudaTextureFilterMode filter_mode=cudaFilterModePoint) {
+        s_ = s;
+        s_texST.filterMode = filter_mode;
+        GPU_SAFE_CALL(cudaBindTexture2D(0, s_texST, img.ptr(), img.w(), img.h(), img.pitch()));
+    }
+
+    __host__ ~gpu_resampler_ST() {
+        s_texST.filterMode = cudaFilterModePoint;
+        cudaUnbindTexture(s_texST);
+    }
+
+    __device__ T operator()(float x, float y) const { 
+        return tex2D(s_texST, s_.x * x, s_.x * y); 
+    } 
+};
 
 template <typename T> 
 struct gpu_constant_sampler {
